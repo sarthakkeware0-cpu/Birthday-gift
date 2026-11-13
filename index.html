@@ -95,6 +95,25 @@
   button:active { transform: scale(.97); }
   button:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
 
+  [hidden] { display: none !important; }
+  .blessings { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 8px; text-align: left; }
+  .blessings li { position: relative; padding-left: 1.7em; line-height: 1.5; }
+  .blessings li::before { content: "✨"; position: absolute; left: 0; }
+  .btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .ghost { background: transparent; color: var(--cream); border: 1.5px solid rgba(255,247,236,.4); }
+  .qh { font-size: clamp(2rem, 9vw, 2.8rem); }
+  .choices { display: flex; gap: 14px; justify-content: center; align-items: center; min-height: 90px; margin-top: 18px; }
+  .choices button { margin-top: 0; }
+  .yes { background: var(--pink); color: #fff; transition: transform .25s; }
+  #no { background: var(--cream); touch-action: manipulation; transition: left .25s ease, top .25s ease; z-index: 10; }
+  .heart { position: fixed; bottom: -30px; font-size: 26px; z-index: 6; pointer-events: none; animation: rise 3.5s ease-in forwards; }
+  @keyframes rise { to { transform: translateY(-115vh) rotate(25deg); opacity: 0; } }
+
+  .gifts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+  .gift { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; margin: 0; padding: 18px 10px; border-radius: 20px; background: rgba(255,247,236,.08); color: var(--cream); border: 1.5px solid rgba(255,247,236,.25); font-size: 1.05rem; min-height: 104px; transition: transform .2s, background .2s, opacity .2s; }
+  .gift .em { font-size: 2.2rem; line-height: 1; }
+  .gift.picked { background: var(--pink); border-color: var(--pink); color: #fff; transform: scale(1.04); }
+
   @media (prefers-reduced-motion: reduce) {
     .flame { animation: none; }
     .card { transition: none; }
@@ -113,22 +132,53 @@
     <div class="tier t1"></div>
   </div>
 
-  <h1>Happy Birthday<span class="name" id="name">Friend!</span></h1>
+  <h1>Happy Birthday<span class="name" id="name">Sanu!</span></h1>
   <p class="hint" id="hint">Tap the cake to blow out the candle</p>
 
   <section class="card" aria-live="polite">
-    <p id="message">Wishing you a day full of laughter, good food, and people who love you. May this year bring you everything you’ve been hoping for.</p>
+    <p id="message">On your special day, here are my blessings for you:</p>
+    <ul class="blessings">
+      <li>May all your dreams come true</li>
+      <li>Good health, happiness and peace stay with you always</li>
+      <li>May love and laughter fill every day of your year</li>
+      <li>May success follow you everywhere you go</li>
+    </ul>
     <p class="from" id="from">With love</p>
-    <button id="again" type="button">More confetti</button>
+    <div class="btns">
+      <button id="again" type="button" class="ghost">More confetti</button>
+      <button id="next" type="button">Next</button>
+    </div>
   </section>
+</main>
+
+<main id="page2" hidden>
+  <h1 class="qh"><span id="q2name">Sanu,</span><span class="name" id="q2">do you love Sarthak?</span></h1>
+  <p class="hint" id="note">Be honest 😏</p>
+  <div class="choices">
+    <button id="yes" class="yes" type="button">Yes 💖</button>
+    <button id="no" type="button">No</button>
+    <button id="next2" type="button" hidden>Next 🎁</button>
+  </div>
+</main>
+
+<!-- PAGE 3 -->
+<main id="page3" hidden>
+  <h1 class="qh"><span id="q3name">Sanu,</span><span class="name" id="q3">what gift do you want from me?</span></h1>
+  <p class="hint" id="note3">Pick one 🎁</p>
+  <div class="gifts" id="gifts">
+    <button class="gift" type="button" data-gift="Flowers"><span class="em">💐</span>Flowers</button>
+    <button class="gift" type="button" data-gift="Earrings"><span class="em">💎</span>Earrings</button>
+    <button class="gift" type="button" data-gift="Makeup kit"><span class="em">💄</span>Makeup kit</button>
+    <button class="gift" type="button" data-gift="Chocolate"><span class="em">🍫</span>Chocolate</button>
+  </div>
 </main>
 
 <script>
   // ---- Customize here (or use the link: birthday.html?name=Riya&from=Aman) ----
   const CONFIG = {
-    name: "Friend",
+    name: "Sanu",
     from: "With love",
-    message: "Wishing you a day full of laughter, good food, and people who love you. May this year bring you everything you’ve been hoping for."
+    message: "On your special day, here are my blessings for you:"
   };
 
   const params = new URLSearchParams(location.search);
@@ -236,6 +286,82 @@
   document.getElementById("again").addEventListener("click", () => {
     burst(W / 2, H * .4, 140);
     rain(80);
+  });
+
+  // ---- Page 2 ----
+  const page2 = document.getElementById("page2");
+  const yesBtn = document.getElementById("yes");
+  const noBtn = document.getElementById("no");
+  const note = document.getElementById("note");
+  document.getElementById("q2name").textContent = name + ",";
+
+  document.getElementById("next").addEventListener("click", () => {
+    app.hidden = true;
+    page2.hidden = false;
+    burst(W / 2, H * .3, 60);
+  });
+
+  const teases = ["Nice try 😏", "Too slow!", "Are you sure? 🤭", "Just say yes 💖", "The No button is shy", "Can't catch me!"];
+  let dodges = 0;
+  function dodge(e) {
+    e.preventDefault();
+    dodges++;
+    noBtn.style.position = "fixed";
+    const bw = noBtn.offsetWidth, bh = noBtn.offsetHeight, m = 12;
+    const y = yesBtn.getBoundingClientRect();
+    let x, t, tries = 0;
+    do {
+      x = m + Math.random() * (W - bw - 2 * m);
+      t = m + Math.random() * (H - bh - 2 * m);
+      tries++;
+    } while (tries < 15 && x < y.right + 10 && x + bw > y.left - 10 && t < y.bottom + 10 && t + bh > y.top - 10);
+    noBtn.style.left = x + "px";
+    noBtn.style.top = t + "px";
+    yesBtn.style.transform = "scale(" + Math.min(1 + dodges * .08, 1.6) + ")";
+    note.textContent = teases[dodges % teases.length];
+  }
+  ["pointerenter", "pointerdown", "click"].forEach(ev => noBtn.addEventListener(ev, dodge));
+
+  yesBtn.addEventListener("click", () => {
+    noBtn.hidden = true;
+    yesBtn.hidden = true;
+    document.getElementById("next2").hidden = false;
+    document.getElementById("q2").textContent = "Ok, I knew it! 💖";
+    note.textContent = "Sarthak is the luckiest person today.";
+    burst(W / 2, H * .4, 200);
+    setTimeout(() => rain(100), 400);
+    if (!reduceMotion) for (let i = 0; i < 24; i++) {
+      const h = document.createElement("span");
+      h.className = "heart";
+      h.textContent = "💖";
+      h.style.left = Math.random() * 95 + "vw";
+      h.style.animationDelay = Math.random() * 1.5 + "s";
+      document.body.appendChild(h);
+      setTimeout(() => h.remove(), 6000);
+    }
+  });
+
+  // ---- Page 3 ----
+  const page3 = document.getElementById("page3");
+  document.getElementById("q3name").textContent = name + ",";
+  document.getElementById("next2").addEventListener("click", () => {
+    page2.hidden = true;
+    page3.hidden = false;
+    burst(W / 2, H * .3, 50);
+  });
+
+  const gifts = document.getElementById("gifts");
+  gifts.addEventListener("click", e => {
+    const b = e.target.closest(".gift");
+    if (!b) return;
+    gifts.querySelectorAll(".gift").forEach(g => {
+      g.classList.toggle("picked", g === b);
+      g.style.opacity = g === b ? "1" : ".4";
+    });
+    document.getElementById("q3").textContent = b.dataset.gift + " it is! " + b.querySelector(".em").textContent;
+    document.getElementById("note3").textContent = "Noted! Your birthday gift is on its way 🎁";
+    const r = b.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height / 2, 120);
   });
 
   // Welcome burst on load
